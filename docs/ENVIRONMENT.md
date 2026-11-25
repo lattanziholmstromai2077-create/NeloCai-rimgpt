@@ -25,6 +25,23 @@ $dll = ./tools/Build-Diagnostics.ps1 -GameRoot $paths.game -WorkshopRoot $paths.
 
 构建命令输出暂存 DLL 的路径，并在同目录写入 `build-evidence.json`。需选择已存在的父目录下一个新目录，放在游戏、工坊和用户数据目录之外。它通过 SHA256 核验本地 UAP 源文件，所需版本及范围见 [决策记录](decisions/0001-diagnostics-source-scope.md)。
 
+## 恢复本地构建输入
+
+所需输入是 `20261120-legacy-local-audit` 的 `UapLocalization.cs`。Nelo 本机的独立备份位置是 `$HOME/Documents/Codex/RimGPT-local-backups/20261120-legacy-local-audit/UapLocalization.cs`。需要恢复时，用下面这段命令替换暂存构建示例中给 `$uap` 赋值的那一行。备份与恢复副本都应匹配下列 SHA256。
+
+```powershell
+$backup = Join-Path $HOME 'Documents/Codex/RimGPT-local-backups/20261120-legacy-local-audit/UapLocalization.cs'
+$expected = 'B98C1938A7881D6A0A02ADF25AE99E704E2FCE95DA32A01419CAAFFDFC2022A5'
+if ((Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash -ne $expected) { throw 'UAP backup hash mismatch' }
+$restore = Join-Path ([IO.Path]::GetTempPath()) ('RimGPT-UAP-' + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $restore | Out-Null
+$uap = Join-Path $restore 'UapLocalization.cs'
+Copy-Item -LiteralPath $backup -Destination $uap
+if ((Get-FileHash -LiteralPath $uap -Algorithm SHA256).Hash -ne $expected) { throw 'UAP restored source hash mismatch' }
+```
+
+备份路径在 Git 仓库外，迁移机器时随本地维护档案单独搬迁。Git 跟踪恢复说明及哈希。
+
 ## 比对与回归
 
 沿用上一步的变量。两个回归脚本请分别在独立 PowerShell 进程中运行，避免程序集加载和运行时补丁互相干扰。
@@ -33,6 +50,7 @@ $dll = ./tools/Build-Diagnostics.ps1 -GameRoot $paths.game -WorkshopRoot $paths.
 $installed = Join-Path $paths.game 'Mods/NeloLocalFixes/Assemblies/NeloRepairDiagnostics.dll'
 $cecil = Join-Path $paths.workshop '839005762/1.2/Assemblies/Mono.Cecil.dll'
 ./tools/Compare-Diagnostics.ps1 -InstalledDll $installed -StagedDll $dll -CecilDll $cecil
+pwsh -NoLogo -NoProfile -File ./tests/Test-DiagnosticsComparison.ps1 -CecilDll $cecil
 pwsh -NoLogo -NoProfile -File ./tests/Test-DiagnosticsAudit.ps1 -FixPath $dll -GameRoot $paths.game -WorkshopRoot $paths.workshop
 pwsh -NoLogo -NoProfile -File ./tests/Test-DiagnosticsCompatibility.ps1 -FixPath $dll -GameRoot $paths.game -WorkshopRoot $paths.workshop
 ```

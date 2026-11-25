@@ -17,9 +17,24 @@ function Get-MethodBodyRecords($Types) {
     foreach ($type in $Types) {
         foreach ($method in $type.Methods) {
             if ($method.HasBody) {
+                $handlers = foreach ($handler in $method.Body.ExceptionHandlers) {
+                    [ordered]@{
+                        Kind         = $handler.HandlerType.ToString()
+                        CatchType    = $handler.CatchType.FullName
+                        CatchScope   = if ($handler.CatchType -and $handler.CatchType.Scope -ne $type.Module) {
+                            $handler.CatchType.Scope.ToString()
+                        }
+                        TryStart     = $handler.TryStart.Offset
+                        TryEnd       = $handler.TryEnd.Offset
+                        HandlerStart = $handler.HandlerStart.Offset
+                        HandlerEnd   = $handler.HandlerEnd.Offset
+                        FilterStart  = $handler.FilterStart.Offset
+                    } | ConvertTo-Json -Compress
+                }
                 [pscustomobject]@{
                     Method = $method.FullName
                     Instructions = ($method.Body.Instructions | ForEach-Object ToString) -join [Environment]::NewLine
+                    ExceptionHandlers = $handlers -join [Environment]::NewLine
                 }
             }
         }
@@ -34,14 +49,14 @@ try {
         $before = @(Get-MethodBodyRecords $installed.MainModule.Types)
         $after = @(Get-MethodBodyRecords $staged.MainModule.Types)
         if ($before.Count -eq 0 -or $after.Count -eq 0) { throw 'An assembly has no comparable method bodies.' }
-        $difference = @(Compare-Object $before $after -Property Method, Instructions -CaseSensitive)
+        $difference = @(Compare-Object $before $after -Property Method, Instructions, ExceptionHandlers -CaseSensitive)
         [ordered]@{
             installedMethods = $before.Count
             stagedMethods = $after.Count
             differences = $difference.Count
             methods = @($difference | Select-Object Method, SideIndicator)
         } | ConvertTo-Json -Depth 4
-        if ($difference.Count) { throw 'Method signatures or instructions differ from the installed assembly.' }
+        if ($difference.Count) { throw 'Method signatures, instructions, or exception handlers differ from the installed assembly.' }
     } finally {
         $staged.Dispose()
     }
