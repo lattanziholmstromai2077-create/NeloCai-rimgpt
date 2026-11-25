@@ -1,0 +1,41 @@
+# Secrets and local machine configuration
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.pfx
+*.p12
+secrets/
+credentials.*
+/paths.json
+*.local.json
+
+# Private RimWorld data and copied maintenance archives
+[Cc]onfig/
+[Ss]aves/
+[Ll]ogs/
+*.rws
+*.log
+[Mm]odsConfig.xml
+[Pp]layer*.txt
+/evidence/
+/inventory/
+/scans/
+/sources/
+/backups/
+/game/
+/workshop/
+
+# Build outputs and editor state
+bin/
+obj/
+artifacts/
+staging/
+*.dll
+*.exe
+*.pdb
+*.zip
+*.7z
+.vs/
+__pycache__/
