@@ -1,7 +1,7 @@
 # RimGPT
 
-RimWorld 本地模组的维护仓库。维护范围包括自有兼容补丁、独立修复说明和可复现的验证记录。当前版本化基线以维护文档为主，仓库暂不能独立构建或作为模组安装。
+RimWorld 本地模组的维护仓库。维护范围包括自有兼容补丁、独立修复说明和验证记录。当前基线覆盖主兼容程序集 `NeloRepairDiagnostics`。构建需要本机的 RimWorld、依赖程序集和一份本地兼容源码；产物用于暂存与核验。
 
-新会话依次阅读 [AGENTS.md](AGENTS.md) 和 [项目状态](docs/PROJECT_STATE.md)。查阅 [环境与构建](docs/ENVIRONMENT.md) 和 [验证清单](tests/README.md) 了解本机构建、隔离测试和恢复方法。
+新会话依次阅读 [AGENTS.md](AGENTS.md) 和 [项目状态](docs/PROJECT_STATE.md)。从 [环境与构建](docs/ENVIRONMENT.md) 暂存编译，用 [验证清单](tests/README.md) 复跑方法指令比对和隔离回归。
 
-先核对当前游戏、依赖和目标补丁版本。安装或回退时使用对应变更记录中的备份与哈希，并核对本机的实际加载路径。
+安装或回退时先核对实际加载路径、目标文件与历史备份哈希。流程见 [日常维护](docs/MAINTENANCE.md)。

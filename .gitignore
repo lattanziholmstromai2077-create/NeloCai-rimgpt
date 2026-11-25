@@ -39,3 +39,6 @@ staging/
 *.7z
 .vs/
 __pycache__/
+
+# Local inputs from the audited baseline
+UapLocalization.cs
